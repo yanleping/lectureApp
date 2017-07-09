@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title><%= title %></title>
+		<meta http-equiv="Access-Control-Allow-Origin" content="*" />
+		<link rel='stylesheet' href='/stylesheets/style.css' />
+		<link rel='stylesheet' href='/stylesheets/bootstrap.min.css' />
+		<link rel='stylesheet' href='/datetimepicker/css/bootstrap-datetimepicker.css' />
+		<script src="/javascripts/jquery.min.js"></script>
+		<script src="/moment/moment.min.js"></script>
+		<script src="/javascripts/bootstrap.min.js"></script>
+		<script src="/datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+		<script src="/bmob_sdk/bmob-min.js"></script>
+		<script src="/javascripts/tags.js"></script>
+	</head>
+	<body>
+		<style type="text/css">
+		body{
+			font-family: 'Microsoft Yahei';
+		}
+		.my-input{
+			margin-bottom: 8px;
+			margin-top: 2px;
+			border: none;
+    		border-bottom: solid 1px #888;
+		}
+		.my-input:focus{
+			outline: none;
+			/*border: none;*/
+    		border-bottom: solid 1px #03A9F4;
+		}
+		.filler{
+			height: 5px;
+			width: 100%;
+			clear: both;
+		}
+		</style>
+		<div class="container"><div class="row"><div class="col-xs-12">
+			<span><h1 style="font-family: 'Microsoft Yahei'"><%= title %></h1></span>
+			<span><p>Welcome, <%= user %></p></span>
+			<nav class="navbar navbar-default" role="navigation">
+				<div class="container-fluid">
+					<ul class="nav navbar-nav">
+						<li><a href="#myCarousel" data-slide-to="0">讲座发布</a></li>
+						<li><a href="#myCarousel" data-slide-to="1">讲座管理</a></li>
+						<li><a href="#myCarousel" data-slide-to="2">用户管理</a></li>
+					</ul>
+				</div>
+			</nav>
+
+			<div id="myCarousel" class="carousel slide">  
+				<!-- 轮播（Carousel）项目 -->
+				<div class="carousel-inner">
+					<div class="item active">
+						<div>
+							<label class="col-xs-2 text-right">讲座标题</label>
+							<div class="col-xs-8">
+								<input id="title" class="form-control" type="text" name="">
+							</div>
+							<div class="filler"></div>
+						</div>
+						<div>
+							<label class="col-xs-2 text-right">讲座概要</label>
+							<div class="col-xs-8">
+								<textarea id="summary" rows="6" class="form-control"></textarea>
+							</div>
+							<div class="filler"></div>
+						</div>
+						<div>
+							<label class="col-xs-2 text-right">讲座标签</label>
+							<div class="col-xs-2">
+								<select id="tags-selectarea" class="form-control" type="select" name="">
+									<option value="-1">请选择标签</option>
+								</select>
+							</div>
+							<div class="col-xs-4" id="tags-bufferarea"></div>
+							<div class="filler"></div>
+						</div>
+						<div>
+							<label class="col-xs-2 text-right">发布单位</label>
+							<div class="col-xs-8">
+								<input id="publisher" class="form-control" type="text" name="">
+							</div>
+							<div class="filler"></div>
+						</div>
+						<div>
+							<label class="col-xs-2 text-right">主讲人</label>
+							<div class="col-xs-8">
+								<input id="lecturer" class="form-control" type="text" name="">
+							</div>
+							<div class="filler"></div>
+						</div>
+						<div>
+							<label class="col-xs-2 text-right">主讲人简介</label>
+							<div class="col-xs-8">
+								<textarea id="lecturerInfo" rows="3" class="form-control"></textarea>
+							</div>
+							<div class="filler"></div>
+						</div>
+						<div>
+							<label class="col-xs-2 text-right">举办地点</label>
+							<div class="col-xs-8">
+								<input id="address" class="form-control" type="text" name="">
+							</div>
+							<div class="filler"></div>
+						</div>
+						<div>
+							<label class="col-xs-2 text-right">举办时间</label>
+							<div class='col-sm-8'>
+								<input id='startDate' class="form-control" type='text' />
+							</div>
+							<div class="filler"></div>
+						</div>
+						<div>
+							<label class="col-xs-2 text-right">讲座级别</label>
+							<div class="col-xs-8" id="level">
+								<input type="radio" name="level" value="0" id="level0"><label for="level0" style="margin-left: 10px;margin-right: 40px;">公开</label>
+								<input type="radio" name="level" value="1" id="level1"><label for="level1" style="margin-left: 10px;margin-right: 40px;">院级</label>
+								<input type="radio" name="level" value="2" id="level2"><label for="level2" style="margin-left: 10px;margin-right: 40px;">校级</label>
+								<input type="radio" name="level" value="3" id="level3"><label for="level3" style="margin-left: 10px;margin-right: 40px;">共办</label>
+							</div>
+							<div class="filler"></div>
+						</div>
+						<button class="btn btn-sm btn-success col-xs-offset-1" id="submit">发布讲座</button>
+					</div>
+					<div class="item">
+						<table class="table" id="Lec-table" style="width: 100%;"></table>
+					</div>
+					<div class="item">
+						<table class="table" id="User-table" style="width: 100%;"></table>
+					</div>
+				</div>
+			</div>
+		</div></div></div>
+		
+		<script type="text/javascript">
+			Bmob.initialize("d70e6d7b21e251924ae1288c7542604c", "73b80365c20a765c3befa7d736d904ef");
+			var lecture = Bmob.Object.extend("Lecture");
+			var user = Bmob.Object.extend("_User");
+			// lecture : 数据库表名
+			var lec = new lecture();
+			$(document).ready(function(){
+				queryAllLec();
+				queryAllUser();
+				$('#startDate').datetimepicker({
+					format: 'YYYY-MM-DD HH:mm'
+				});
+				for (var i in tags){
+					var option = $("<option></option>");
+					option.val(tags[i]).text(i);
+					$("#tags-selectarea").append(option);
+				}
+			});
+			$("#tags-selectarea").change(function(){
+				if($(this).val() != -1){
+					var option = $(this).find("option:selected").text();
+					var alt = $(this).val();
+					var span = $("<span></span>").addClass("label label-success").css("margin", "10px").attr("alt", alt).text(option);
+					span.click(function(){
+						span.remove();
+					});
+					$("#tags-bufferarea").append(span);
+				}
+			});
+			
+			$("#submit").click(function(){
+				var tags = "";
+				$("#tags-bufferarea span").each(function(i){
+					// tagsArr.push($(this).attr("alt"));
+					var flat = ",";
+					if(i == 0){flat = ""}
+					tags += (flat + $(this).text());
+				});
+				var data = {
+					"title": $("#title").val(),
+					// 标题
+					"summary": $("#summary").val(),
+					// 概要
+					"publisher": $("#publisher").val(),
+					// 发布单位
+					"lecturer": $("#lecturer").val(),
+					// 主讲人
+					"lecturerInfo": $("#lecturerInfo").val(),
+					// 主讲人简介
+					"address": $("#address").val(),
+					// 举办地点
+					"startDate": $("#startDate").val(),
+					// 举办时间
+					"level": $('#level input:radio:checked').val(),
+					// 盖章级别：公开（0）、院级（1）、校级（2）、共办（3）
+					"tags": tags
+					// 标签序列
+				};
+				lec.set(data);
+				lec.save(null, {
+					success: function(object) {
+						console.log("Create object success! Object id: " + object.id);
+						alert("发布成功");
+						window.history.go(0);
+					},
+					error: function(model, error) {
+						console.log("Create object fail!");
+					}
+				});
+			});
+			var queryAllLec = function(){
+				var query = new Bmob.Query(lecture);
+				query.find({
+					success: function(result){
+						$("#Lec-table").children().remove();
+						// 清除原来的表内容
+						var Obj_length = 0;
+						// var tr = $(document.createElement("tr"));
+						var tr = $("<tr></tr>");
+						for(var i in result[0].attributes){
+                            Obj_length++;
+                        	var th = $(document.createElement("th"));
+                            th.text(i);
+                            // 如此读对象的项
+                            tr.append(th);
+                        }
+                        $("#Lec-table").append(tr);
+                        // 构建表头
+						for (var i = 0; i < result.length; i++) {
+							var tr = $(document.createElement("tr"));
+							for (var j in result[i].attributes) {
+                        		var td = $(document.createElement("td"));
+								td.text(result[i].attributes[j]);
+								// 如此读对象的值
+								tr.append(td);
+							}
+							// 获取每一个字段的值，塞入一行（tr）
+							$("#Lec-table").append(tr);
+							// 将那一行塞到表格（table）
+						}
+					},
+					error: function(error){
+						console.log(error);
+					}
+				});
+			}
+			var queryAllUser = function(){
+				var query = new Bmob.Query(user);
+				query.find({
+					success: function(result){
+						$("#User-table").children().remove();
+						// 清除原来的表内容
+						var tr = $("<tr><th>ID</th><th>登录名</th><th>邮箱</th><th>头像</th></tr>");
+                        $("#User-table").append(tr);
+                        // 构建表头
+						for (var i = 0; i < result.length; i++) {
+							var tr = $("<tr></tr>");
+							var td = $("<td>"+result[i].id+"</td>");
+							tr.append(td);
+							var td = $("<td>"+result[i].attributes.username+"</td>");
+							tr.append(td);
+							var td = $("<td>"+result[i].attributes.email+"</td>");
+							tr.append(td);
+							var div = $("<div></div>");
+							div.css({
+								"height": "100px",
+								"width": "100px",
+								"background-image": "url("+(result[i].attributes.image._url.split("http://file.bmob.cn/"))[1]+")",
+								"background-position": "center center",
+								"background-size": "cover"
+							});
+							var td = $("<td></td>");
+							td.append(div);
+							tr.append(td);
+							// 获取每一个字段的值，塞入一行（tr）
+							$("#User-table").append(tr);
+							// 将那一行塞到表格（table）
+						}
+					},
+					error: function(error){
+						console.log(error);
+					}
+				});
+			}
+		</script>
+	</body>
+</html>
